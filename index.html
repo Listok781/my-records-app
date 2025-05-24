@@ -16,9 +16,86 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
+    <div id="loginScreen" class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+        <h2 class="text-2xl font-bold mb-6 text-center">Вход</h2>
+        <div id="messageDiv" class="mb-4 text-red-500 text-center"></div>
+        <div class="mb-4">
+            <label for="loginInput" class="block text-gray-700 text-sm font-bold mb-2">Логин:</label>
+            <input type="text" id="loginInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Listok78">
+        </div>
+        <div class="mb-6">
+            <label for="passwordInput" class="block text-gray-700 text-sm font-bold mb-2">Пароль:</label>
+            <input type="password" id="passwordInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" value="Rach78_Rach78">
+        </div>
+        <div class="flex items-center justify-between">
+            <button id="loginButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+                Войти
+            </button>
+        </div>
+    </div>
+
+    <div id="mainAppScreen" class="bg-white p-8 rounded-lg shadow-md w-full max-w-3xl hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Панель Управления Записями</h2>
+            <div>
+                <span class="text-gray-700 mr-2">Привет, <span id="userLogin" class="font-bold"></span> (<span id="userRole" class="font-bold"></span>)!</span>
+                <button id="logoutButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline">
+                    Выйти
+                </button>
+            </div>
+        </div>
+
+        <div id="adminPanel" class="mb-6 p-4 border border-gray-300 rounded-md bg-gray-50 hidden">
+            <h3 class="text-lg font-bold mb-2">Админ-панель</h3>
+            <button id="resetDataButton" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Сбросить все данные
+            </button>
+        </div>
+
+        <h3 class="text-xl font-bold mb-4">Мои записи</h3>
+        <div class="overflow-x-auto mb-6">
+            <table class="min-w-full bg-white border border-gray-300">
+                <thead>
+                    <tr>
+                        <th class="py-2 px-4 border-b">ID</th>
+                        <th class="py-2 px-4 border-b">Заголовок</th>
+                        <th class="py-2 px-4 border-b">Содержание</th>
+                        <th class="py-2 px-4 border-b">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="recordEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-4">Редактировать запись</h2>
+            <div id="modalMessageDiv" class="mb-4 text-center"></div>
+            <input type="hidden" id="currentRecordId">
+            <div class="mb-4">
+                <label for="recordTitle" class="block text-gray-700 text-sm font-bold mb-2">Заголовок:</label>
+                <input type="text" id="recordTitle" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-6">
+                <label for="recordContent" class="block text-gray-700 text-sm font-bold mb-2">Содержание:</label>
+                <textarea id="recordContent" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"></textarea>
+            </div>
+            <div class="flex justify-end">
+                <button id="saveRecordButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
+                    Сохранить
+                </button>
+                <button id="closeModalButton" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- ВАЖНО: ЗАМЕНИТЕ ЭТОТ URL НА СВОЙ API_ENDPOINT_URL ИЗ ВАШЕГО НОВОГО ТЕСТОВОГО GOOGLE APPS SCRIPT (CORS_Test_Project) ---
-        const API_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbxv2DOB9Hx5_vVCM9mPLRiaGWEgn4JlPBSrXnC66ASBekRVI2aFHRCgHr402ivnIMw/exec'; // Пример: 'https://script.google.com/macros/s/АКFycbxABCD12345/exec';
+        const API_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbxv2DOB9Hx5_vVCM9mPLRiaGWEgn4JlPBSrXnC66ASBekRVI2aFHRCgHr402ivnIMw/exec'; // Этот URL из вашего скриншота, проверьте еще раз
 
         // Функция для отправки запросов к Apps Script
         async function sendApiRequest(route, method, data = null, id = null) {
@@ -68,6 +145,29 @@
             }
         }
 
+        // --- Элементы DOM (Инициализируем ПОСЛЕ того, как они загружены) ---
+        const loginScreen = document.getElementById('loginScreen');
+        const mainAppScreen = document.getElementById('mainAppScreen');
+        const loginInput = document.getElementById('loginInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginButton = document.getElementById('loginButton');
+        const messageDiv = document.getElementById('messageDiv');
+        const userLoginDiv = document.getElementById('userLogin');
+        const userRoleDiv = document.getElementById('userRole');
+        const logoutButton = document.getElementById('logoutButton');
+        const recordsTableBody = document.getElementById('recordsTableBody');
+        const adminPanel = document.getElementById('adminPanel');
+        const resetDataButton = document.getElementById('resetDataButton');
+        const recordTitleInput = document.getElementById('recordTitle');
+        const recordContentInput = document.getElementById('recordContent');
+        const recordEditButton = document.getElementById('recordEditButton'); // Возможно, эти элементы нужны только в модальном окне, и их ID уникальны
+        const recordDeleteButton = document.getElementById('recordDeleteButton'); // Убедитесь, что ID `recordEditButton` и `recordDeleteButton` существуют на странице. Если нет, это может быть источником null.
+        const recordEditModal = document.getElementById('recordEditModal');
+        const closeModalButton = document.getElementById('closeModalButton');
+        const saveRecordButton = document.getElementById('saveRecordButton');
+        const currentRecordIdInput = document.getElementById('currentRecordId');
+        const modalMessageDiv = document.getElementById('modalMessageDiv');
+
         // --- Обработчик загрузки страницы ---
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Документ загружен. Пытаемся выполнить простой GET-запрос к Apps Script...');
@@ -94,29 +194,6 @@
                 mainAppScreen.classList.remove('hidden');
             }
         });
-
-        // --- Элементы DOM ---
-        const loginScreen = document.getElementById('loginScreen');
-        const mainAppScreen = document.getElementById('mainAppScreen');
-        const loginInput = document.getElementById('loginInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const loginButton = document.getElementById('loginButton');
-        const messageDiv = document.getElementById('messageDiv');
-        const userLoginDiv = document.getElementById('userLogin');
-        const userRoleDiv = document.getElementById('userRole');
-        const logoutButton = document.getElementById('logoutButton');
-        const recordsTableBody = document.getElementById('recordsTableBody');
-        const adminPanel = document.getElementById('adminPanel');
-        const resetDataButton = document.getElementById('resetDataButton');
-        const recordTitleInput = document.getElementById('recordTitle');
-        const recordContentInput = document.getElementById('recordContent');
-        const recordEditButton = document.getElementById('recordEditButton');
-        const recordDeleteButton = document.getElementById('recordDeleteButton');
-        const recordEditModal = document.getElementById('recordEditModal');
-        const closeModalButton = document.getElementById('closeModalButton');
-        const saveRecordButton = document.getElementById('saveRecordButton');
-        const currentRecordIdInput = document.getElementById('currentRecordId');
-        const modalMessageDiv = document.getElementById('modalMessageDiv');
 
 
         // --- Функции аутентификации ---
@@ -278,83 +355,6 @@
         });
 
     </script>
-
-    <div id="loginScreen" class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-        <h2 class="text-2xl font-bold mb-6 text-center">Вход</h2>
-        <div id="messageDiv" class="mb-4 text-red-500 text-center"></div>
-        <div class="mb-4">
-            <label for="loginInput" class="block text-gray-700 text-sm font-bold mb-2">Логин:</label>
-            <input type="text" id="loginInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Listok78">
-        </div>
-        <div class="mb-6">
-            <label for="passwordInput" class="block text-gray-700 text-sm font-bold mb-2">Пароль:</label>
-            <input type="password" id="passwordInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" value="Rach78_Rach78">
-        </div>
-        <div class="flex items-center justify-between">
-            <button id="loginButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
-                Войти
-            </button>
-        </div>
-    </div>
-
-    <div id="mainAppScreen" class="bg-white p-8 rounded-lg shadow-md w-full max-w-3xl hidden">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">Панель Управления Записями</h2>
-            <div>
-                <span class="text-gray-700 mr-2">Привет, <span id="userLogin" class="font-bold"></span> (<span id="userRole" class="font-bold"></span>)!</span>
-                <button id="logoutButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline">
-                    Выйти
-                </button>
-            </div>
-        </div>
-
-        <div id="adminPanel" class="mb-6 p-4 border border-gray-300 rounded-md bg-gray-50 hidden">
-            <h3 class="text-lg font-bold mb-2">Админ-панель</h3>
-            <button id="resetDataButton" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Сбросить все данные
-            </button>
-        </div>
-
-        <h3 class="text-xl font-bold mb-4">Мои записи</h3>
-        <div class="overflow-x-auto mb-6">
-            <table class="min-w-full bg-white border border-gray-300">
-                <thead>
-                    <tr>
-                        <th class="py-2 px-4 border-b">ID</th>
-                        <th class="py-2 px-4 border-b">Заголовок</th>
-                        <th class="py-2 px-4 border-b">Содержание</th>
-                        <th class="py-2 px-4 border-b">Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="recordsTableBody">
-                    </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="recordEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-4">Редактировать запись</h2>
-            <div id="modalMessageDiv" class="mb-4 text-center"></div>
-            <input type="hidden" id="currentRecordId">
-            <div class="mb-4">
-                <label for="recordTitle" class="block text-gray-700 text-sm font-bold mb-2">Заголовок:</label>
-                <input type="text" id="recordTitle" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-            <div class="mb-6">
-                <label for="recordContent" class="block text-gray-700 text-sm font-bold mb-2">Содержание:</label>
-                <textarea id="recordContent" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"></textarea>
-            </div>
-            <div class="flex justify-end">
-                <button id="saveRecordButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
-                    Сохранить
-                </button>
-                <button id="closeModalButton" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Отмена
-                </button>
-            </div>
-        </div>
-    </div>
 
 </body>
 </html>

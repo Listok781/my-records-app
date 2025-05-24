@@ -95,7 +95,7 @@
 
     <script>
         // --- ВАЖНО: ЗАМЕНИТЕ ЭТОТ URL НА СВОЙ API_ENDPOINT_URL ИЗ ВАШЕГО НОВОГО ТЕСТОВОГО GOOGLE APPS SCRIPT (CORS_Test_Project) ---
-        const API_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbxv2DOB9Hx5_vVCM9mPLRiaGWEgn4JlPBSrXnC66ASBekRVI2aFHRCgHr402ivnIMw/exec'; // Этот URL из вашего скриншота, проверьте еще раз
+        const API_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbxv2DOB9Hx5_vVCM9mPLRiaGWEgn4JlPBSrXnC66ASBekRVI2aFHRCgHr402ivnIMw/exec'; // Проверьте, чтобы этот URL был ВАШИМ АКТУАЛЬНЫМ URL развертывания
 
         // Функция для отправки запросов к Apps Script
         async function sendApiRequest(route, method, data = null, id = null) {
@@ -160,8 +160,8 @@
         const resetDataButton = document.getElementById('resetDataButton');
         const recordTitleInput = document.getElementById('recordTitle');
         const recordContentInput = document.getElementById('recordContent');
-        const recordEditButton = document.getElementById('recordEditButton'); // Возможно, эти элементы нужны только в модальном окне, и их ID уникальны
-        const recordDeleteButton = document.getElementById('recordDeleteButton'); // Убедитесь, что ID `recordEditButton` и `recordDeleteButton` существуют на странице. Если нет, это может быть источником null.
+        const recordEditButton = document.getElementById('recordEditButton'); 
+        const recordDeleteButton = document.getElementById('recordDeleteButton'); 
         const recordEditModal = document.getElementById('recordEditModal');
         const closeModalButton = document.getElementById('closeModalButton');
         const saveRecordButton = document.getElementById('saveRecordButton');

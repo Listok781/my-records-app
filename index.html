@@ -200,88 +200,72 @@ loginButton.addEventListener('click', async () => {
     messageDiv.textContent = 'Вход...';
     messageDiv.className = 'text-blue-500 mb-4';
 
-    // const response = await sendApiRequest('login', 'POST', { login, password }); // СТАРАЯ СТРОКА
-
-    // В ЭТОМ МЕСТЕ БУДЕТ ВЫЗОВ FIREBASE AUTH. signInWithEmailAndPassword
-    console.log("Попытка входа через Firebase..."); // ВРЕМЕННО
-
     // Реальный вход через Firebase Authentication
-            try {
-                // Импортируем signInWithEmailAndPassword, если он еще не импортирован
-                // (мы его импортируем глобально в первой script type="module" блоке,
-                // поэтому он доступен через window.auth)
-                const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js');
-                
-                // Используем email для входа, так как Firebase Auth работает с email/паролем
-                const userCredential = await signInWithEmailAndPassword(window.auth, login, password);
-                const user = userCredential.user;
+    try {
+        // Импортируем signInWithEmailAndPassword из Firebase Auth SDK
+        const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js');
+        
+        // Используем email для входа, так как Firebase Auth работает с email/паролем
+        const userCredential = await signInWithEmailAndPassword(window.auth, login, password);
+        const user = userCredential.user;
 
-                // Получаем пользовательскую роль (позже мы будем хранить ее в Firestore)
-                // Для простоты, пока что, если логин "admin@example.com", считаем роль "admin".
-                // В реальном приложении роли хранятся в базе данных (например, Firestore)
-                // и извлекаются после успешной аутентификации.
-                let userRole = 'user';
-                if (user.email === '19781981at@gmail.com') { // ВАЖНО: ЗАМЕНИТЕ НА РЕАЛЬНЫЙ EMAIL АДМИНА
-                    userRole = 'admin';
-                }
+        // Получаем пользовательскую роль (позже мы будем хранить ее в Firestore)
+        // Для простоты, пока что, если логин "admin@example.com", считаем роль "admin".
+        // В реальном приложении роли хранятся в базе данных (например, Firestore)
+        // и извлекаются после успешной аутентификации.
+        let userRole = 'user';
+        if (user.email === '19781981at@gmail.com') { // ВАЖНО: ЗАМЕНИТЕ НА РЕАЛЬНЫЙ EMAIL АДМИНА
+            userRole = 'admin';
+        }
 
-                const currentUserData = {
-                    uid: user.uid,
-                    email: user.email,
-                    role: userRole
-                };
+        const currentUserData = {
+            uid: user.uid,
+            email: user.email,
+            role: userRole
+        };
 
-                localStorage.setItem('currentUser', JSON.stringify(currentUserData)); // Сохраняем реальные данные пользователя
-                userLoginDiv.textContent = currentUserData.email; // Отображаем email
-                userRoleDiv.textContent = currentUserData.role;
-                messageDiv.textContent = 'Вход успешен!';
-                messageDiv.className = 'text-green-500 mb-4';
-                loginScreen.classList.add('hidden');
-                mainAppScreen.classList.remove('hidden');
+        localStorage.setItem('currentUser', JSON.stringify(currentUserData)); // Сохраняем реальные данные пользователя
+        userLoginDiv.textContent = currentUserData.email; // Отображаем email
+        userRoleDiv.textContent = currentUserData.role;
+        messageDiv.textContent = 'Вход успешен!';
+        messageDiv.className = 'text-green-500 mb-4';
+        loginScreen.classList.add('hidden');
+        mainAppScreen.classList.remove('hidden');
 
-                if (currentUserData.role === 'admin') {
-                    adminPanel.classList.remove('hidden');
-                } else {
-                    adminPanel.classList.add('hidden');
-                }
+        if (currentUserData.role === 'admin') {
+            adminPanel.classList.remove('hidden');
+        } else {
+            adminPanel.classList.add('hidden');
+        }
 
-                // Теперь, когда пользователь аутентифицирован, можно загружать записи.
-                // displayRecords(); // Пока закомментировано, реализуем позже
+        // Теперь, когда пользователь аутентифицирован, можно загружать записи.
+        // displayRecords(); // Пока закомментировано, реализуем позже
 
-            } catch (error) {
-                console.error("Ошибка входа:", error);
-                let errorMessage = 'Ошибка входа: Неизвестная ошибка.';
-                switch (error.code) {
-                    case 'auth/invalid-email':
-                        errorMessage = 'Неверный формат email.';
-                        break;
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                        errorMessage = 'Неверный email или пароль.';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMessage = 'Слишком много неудачных попыток входа. Попробуйте позже.';
-                        break;
-                    case 'auth/network-request-failed':
-                        errorMessage = 'Ошибка сети. Проверьте ваше интернет-соединение.';
-                        break;
-                    default:
-                        errorMessage = `Ошибка входа: ${error.message}`;
-                        break;
-                }
-                messageDiv.textContent = errorMessage;
-                messageDiv.className = 'text-red-500 mb-4';
-            }
-
-logoutButton.addEventListener('click', () => {
-    localStorage.removeItem('currentUser');
-    // Здесь будет вызов Firebase Auth signOut
-    loginScreen.classList.remove('hidden');
-    mainAppScreen.classList.add('hidden');
-    messageDiv.textContent = ''; // Очищаем сообщение
-    loginInput.value = '';
-    passwordInput.value = '';
-});
+    } catch (error) {
+        console.error("Ошибка входа:", error);
+        let errorMessage = 'Ошибка входа: Неизвестная ошибка.';
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage = 'Неверный формат email.';
+                break;
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                errorMessage = 'Неверный email или пароль.';
+                break;
+            case 'auth/too-many-requests':
+                errorMessage = 'Слишком много неудачных попыток входа. Попробуйте позже.';
+                break;
+            case 'auth/network-request-failed':
+                errorMessage = 'Ошибка сети. Проверьте ваше интернет-соединение.';
+                break;
+            default:
+                errorMessage = `Ошибка входа: ${error.message}`;
+                break;
+        }
+        messageDiv.textContent = errorMessage;
+        messageDiv.className = 'text-red-500 mb-4';
+    }
+}); // <--- ОБЯЗАТЕЛЬНО УБЕДИТЕСЬ, ЧТО ЭТА ЗАКРЫВАЮЩАЯ СКОБКА СТОИТ!
 
 // --- Функции для работы с записями ---
 // ЭТИ ФУНКЦИИ БУДУТ ЗАМЕНЕНЫ НА ЛОГИКУ FIREBASE FIRESTORE

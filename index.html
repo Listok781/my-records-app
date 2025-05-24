@@ -205,37 +205,73 @@ loginButton.addEventListener('click', async () => {
     // В ЭТОМ МЕСТЕ БУДЕТ ВЫЗОВ FIREBASE AUTH. signInWithEmailAndPassword
     console.log("Попытка входа через Firebase..."); // ВРЕМЕННО
 
-    // ВРЕМЕННЫЙ УСПЕШНЫЙ ВХОД ДЛЯ ТЕСТИРОВАНИЯ UI
-    try {
-        // Поскольку window.auth и window.db инициализируются в <script type="module">
-        // до выполнения этого скрипта, они должны быть доступны.
-        // Эти "Promise" обертки, которые мы делали раньше, больше не нужны.
-        // Теперь можно просто обращаться к window.auth и window.db
-        console.log("Firebase auth объект доступен:", !!window.auth);
-        console.log("Firebase db объект доступен:", !!window.db);
+    // Реальный вход через Firebase Authentication
+            try {
+                // Импортируем signInWithEmailAndPassword, если он еще не импортирован
+                // (мы его импортируем глобально в первой script type="module" блоке,
+                // поэтому он доступен через window.auth)
+                const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js');
+                
+                // Используем email для входа, так как Firebase Auth работает с email/паролем
+                const userCredential = await signInWithEmailAndPassword(window.auth, login, password);
+                const user = userCredential.user;
 
-        // Сейчас здесь пока заглушка, реальный вход будет позже
-        const dummyUser = { email: login, role: 'user', uid: '123' }; // ВРЕМЕННО: используем email, а не login
-        if (login === 'admin') dummyUser.role = 'admin'; // ВРЕМЕННО
+                // Получаем пользовательскую роль (позже мы будем хранить ее в Firestore)
+                // Для простоты, пока что, если логин "admin@example.com", считаем роль "admin".
+                // В реальном приложении роли хранятся в базе данных (например, Firestore)
+                // и извлекаются после успешной аутентификации.
+                let userRole = 'user';
+                if (user.email === 'admin@example.com') { // ВАЖНО: ЗАМЕНИТЕ НА РЕАЛЬНЫЙ EMAIL АДМИНА
+                    userRole = 'admin';
+                }
 
-        localStorage.setItem('currentUser', JSON.stringify(dummyUser)); // Сохраняем email и роль
-        userLoginDiv.textContent = dummyUser.email; // Отображаем email
-        userRoleDiv.textContent = dummyUser.role;
-        messageDiv.textContent = 'Вход успешен! (Временный)';
-        messageDiv.className = 'text-green-500 mb-4';
-        loginScreen.classList.add('hidden');
-        mainAppScreen.classList.remove('hidden');
-        // displayRecords(); // Загружаем записи (пока закомментировано)
-        if (dummyUser.role === 'admin') { // ВРЕМЕННО
-            adminPanel.classList.remove('hidden');
-        } else {
-            adminPanel.classList.add('hidden');
-        }
-    } catch (error) {
-        messageDiv.textContent = 'Ошибка входа: ' + error.message || 'Неизвестная ошибка.'; // ВРЕМЕННО
-        messageDiv.className = 'text-red-500 mb-4';
-    }
-});
+                const currentUserData = {
+                    uid: user.uid,
+                    email: user.email,
+                    role: userRole
+                };
+
+                localStorage.setItem('currentUser', JSON.stringify(currentUserData)); // Сохраняем реальные данные пользователя
+                userLoginDiv.textContent = currentUserData.email; // Отображаем email
+                userRoleDiv.textContent = currentUserData.role;
+                messageDiv.textContent = 'Вход успешен!';
+                messageDiv.className = 'text-green-500 mb-4';
+                loginScreen.classList.add('hidden');
+                mainAppScreen.classList.remove('hidden');
+
+                if (currentUserData.role === 'admin') {
+                    adminPanel.classList.remove('hidden');
+                } else {
+                    adminPanel.classList.add('hidden');
+                }
+
+                // Теперь, когда пользователь аутентифицирован, можно загружать записи.
+                // displayRecords(); // Пока закомментировано, реализуем позже
+
+            } catch (error) {
+                console.error("Ошибка входа:", error);
+                let errorMessage = 'Ошибка входа: Неизвестная ошибка.';
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Неверный формат email.';
+                        break;
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage = 'Неверный email или пароль.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Слишком много неудачных попыток входа. Попробуйте позже.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Ошибка сети. Проверьте ваше интернет-соединение.';
+                        break;
+                    default:
+                        errorMessage = `Ошибка входа: ${error.message}`;
+                        break;
+                }
+                messageDiv.textContent = errorMessage;
+                messageDiv.className = 'text-red-500 mb-4';
+            }
 
 logoutButton.addEventListener('click', () => {
     localStorage.removeItem('currentUser');

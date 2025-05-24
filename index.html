@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';" width=device-width, initial-scale=1.0">
     <title>Панель Управления Записями</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
@@ -93,57 +93,43 @@
         </div>
     </div>
 
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js';
+      import { getAuth } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js';
+      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';
+
+      // Your web app's Firebase configuration - ВСТАВЬТЕ СЮДА ВАШИ РЕАЛЬНЫЕ ЗНАЧЕНИЯ ИЗ КОНСОЛИ FIREBASE
+      const firebaseConfig = {
+        apiKey: "ВАШ_API_KEY",
+        authDomain: "ВАШ_AUTH_DOMAIN",
+        projectId: "ВАШ_PROJECT_ID",
+        storageBucket: "ВАШ_STORAGE_BUCKET",
+        messagingSenderId: "ВАШ_MESSAGING_SENDER_ID",
+        appId: "ВАШ_APP_ID"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      // Инициализируем сервисы Auth и Firestore
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Делаем 'auth' и 'db' глобально доступными для вашего основного скрипта
+      window.auth = auth;
+      window.db = db;
+    </script>
+
+
     <script>
-        // --- ВАЖНО: ЗАМЕНИТЕ ЭТОТ URL НА СВОЙ API_ENDPOINT_URL ИЗ ВАШЕГО НОВОГО ТЕСТОВОГО GOOGLE APPS SCRIPT (CORS_Test_Project) ---
-        const API_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbwcbp_r94Uo8s17QvyuJdePbgyS6Zd4cj6qk3WW9Sja8IaDpCIC0LR5zPggtxK3o2d1/exec'; // Проверьте, чтобы этот URL был ВАШИМ АКТУАЛЬНЫМ URL развертывания
+        // --- УДАЛЕНА: Старая строка API_ENDPOINT_URL, так как мы используем Firebase ---
+        // const API_ENDPOINT_URL = 'https://script.google.com/macros/s/.../exec';
 
-        // Функция для отправки запросов к Apps Script
+        // --- УДАЛЕНА: Старая функция sendApiRequest, она будет заменена Firebase SDK ---
+        /*
         async function sendApiRequest(route, method, data = null, id = null) {
-            const url = new URL(API_ENDPOINT_URL);
-            url.searchParams.append('route', route);
-            if (id !== null) {
-                url.searchParams.append('id', id);
-            }
-            url.searchParams.append('method', method); // Передаем метод как параметр для doPost/doGet/doOptions
-
-            const options = {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('userLogin')}` // Передача логина в заголовке
-                },
-            };
-
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
-
-            try {
-                // Если метод OPTIONS, то тело запроса не должно быть
-                if (method === 'OPTIONS') {
-                    delete options.body;
-                }
-
-                const response = await fetch(url, options);
-
-                // Если статус 200, но это был preflight (OPTIONS), то просто возвращаем успешный статус
-                if (method === 'OPTIONS' && response.status === 200) {
-                    return { ok: true, status: 200 };
-                }
-
-                // Обработка других статусов
-                if (response.ok) { // response.status >= 200 && response.status < 300
-                    const responseData = await response.json();
-                    return { ok: true, status: response.status, data: responseData };
-                } else {
-                    const errorData = await response.json();
-                    return { ok: false, status: response.status, message: errorData.message || 'Неизвестная ошибка' };
-                }
-            } catch (error) {
-                console.error('Ошибка сети или сервера при входе:', error);
-                return { ok: false, status: 0, message: 'Ошибка сети или сервера при входе: ' + error.message };
-            }
+            // ... старый код ...
         }
+        */
 
         // --- Элементы DOM (Инициализируем ПОСЛЕ того, как они загружены) ---
         const loginScreen = document.getElementById('loginScreen');
@@ -170,6 +156,8 @@
 
         // --- Обработчик загрузки страницы ---
         document.addEventListener('DOMContentLoaded', () => {
+            // УДАЛЕН: Старый проверочный GET-запрос к Apps Script, он больше не нужен
+            /*
             console.log('Документ загружен. Пытаемся выполнить простой GET-запрос к Apps Script...');
             fetch(API_ENDPOINT_URL + '?action=testget') // Добавляем простой параметр
                 .then(response => {
@@ -183,13 +171,14 @@
                 .catch(error => {
                     console.error('GET-запрос к Apps Script НЕ УДАЛСЯ:', error);
                 });
+            */
 
-            // Проверяем, авторизован ли пользователь при загрузке страницы
+            // Проверяем, авторизован ли пользователь при загрузке страницы (пока используем localStorage)
             const currentUser = localStorage.getItem('currentUser');
             if (currentUser) {
                 userLoginDiv.textContent = JSON.parse(currentUser).login;
                 userRoleDiv.textContent = JSON.parse(currentUser).role;
-                displayRecords(); // Загружаем записи, если пользователь авторизован
+                // displayRecords(); // Загружаем записи, если пользователь авторизован (пока закомментировано)
                 loginScreen.classList.add('hidden');
                 mainAppScreen.classList.remove('hidden');
             }
@@ -198,6 +187,7 @@
 
         // --- Функции аутентификации ---
         loginButton.addEventListener('click', async () => {
+            // ЭТОТ БЛОК БУДЕТ ЗАМЕНЕН НА ЛОГИКУ FIREBASE AUTHENTICATION
             const login = loginInput.value;
             const password = passwordInput.value;
 
@@ -210,93 +200,74 @@
             messageDiv.textContent = 'Вход...';
             messageDiv.className = 'text-blue-500 mb-4';
 
-            const response = await sendApiRequest('login', 'POST', { login, password });
+            // const response = await sendApiRequest('login', 'POST', { login, password }); // СТАРАЯ СТРОКА
 
-            if (response.ok) {
-                localStorage.setItem('currentUser', JSON.stringify(response.data.user));
-                userLoginDiv.textContent = response.data.user.login;
-                userRoleDiv.textContent = response.data.user.role; // Отображаем роль
-                messageDiv.textContent = 'Вход успешен!';
+            // В ЭТОМ МЕСТЕ БУДЕТ ВЫЗОВ FIREBASE AUTH. signInWithEmailAndPassword
+            console.log("Попытка входа через Firebase..."); // ВРЕМЕННО
+            // Здесь будет логика входа через Firebase Authentication
+
+            // ВРЕМЕННЫЙ УСПЕШНЫЙ ВХОД ДЛЯ ТЕСТИРОВАНИЯ UI
+            try {
+                // Предположим, что firebase.auth и firebase.firestore уже доступны как window.auth и window.db
+                // Асинхронно ждем, пока auth и db будут доступны из модуля
+                // Эти строки можно будет удалить, когда мы полностью перейдем на Firebase
+                const authInstance = await new Promise(resolve => {
+                    const checkAuth = () => {
+                        if (window.auth) resolve(window.auth);
+                        else setTimeout(checkAuth, 50);
+                    };
+                    checkAuth();
+                });
+                const dbInstance = await new Promise(resolve => {
+                    const checkDb = () => {
+                        if (window.db) resolve(window.db);
+                        else setTimeout(checkDb, 50);
+                    };
+                    checkDb();
+                });
+
+                // Сейчас здесь пока заглушка, реальный вход будет позже
+                const dummyUser = { email: login, role: 'user', uid: '123' }; // ВРЕМЕННО: используем email, а не login
+                if (login === 'admin') dummyUser.role = 'admin'; // ВРЕМЕННО
+
+                localStorage.setItem('currentUser', JSON.stringify(dummyUser)); // Сохраняем email и роль
+                userLoginDiv.textContent = dummyUser.email; // Отображаем email
+                userRoleDiv.textContent = dummyUser.role;
+                messageDiv.textContent = 'Вход успешен! (Временный)';
                 messageDiv.className = 'text-green-500 mb-4';
                 loginScreen.classList.add('hidden');
                 mainAppScreen.classList.remove('hidden');
-                displayRecords(); // Загружаем записи
-                if (response.data.user.role === 'admin') {
+                // displayRecords(); // Загружаем записи (пока закомментировано)
+                if (dummyUser.role === 'admin') { // ВРЕМЕННО
                     adminPanel.classList.remove('hidden');
                 } else {
                     adminPanel.classList.add('hidden');
                 }
-            } else {
-                messageDiv.textContent = response.message || 'Неверный логин или пароль.';
+            } catch (error) {
+                messageDiv.textContent = 'Ошибка входа: ' + error.message || 'Неизвестная ошибка.'; // ВРЕМЕННО
                 messageDiv.className = 'text-red-500 mb-4';
             }
         });
 
         logoutButton.addEventListener('click', () => {
             localStorage.removeItem('currentUser');
+            // Здесь будет вызов Firebase Auth signOut
             loginScreen.classList.remove('hidden');
             mainAppScreen.classList.add('hidden');
             messageDiv.textContent = ''; // Очищаем сообщение
-            // Можно очистить поля ввода
             loginInput.value = '';
             passwordInput.value = '';
         });
 
         // --- Функции для работы с записями ---
+        // ЭТИ ФУНКЦИИ БУДУТ ЗАМЕНЕНЫ НА ЛОГИКУ FIREBASE FIRESTORE
         async function displayRecords() {
-            recordsTableBody.innerHTML = '<tr><td colspan="4" class="py-2 px-4 text-center">Загрузка записей...</td></tr>';
-            const response = await sendApiRequest('records', 'GET');
-
-            if (response.ok) {
-                recordsTableBody.innerHTML = ''; // Очищаем старые записи
-                const records = response.data;
-                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-
-                records.forEach(record => {
-                    const row = document.createElement('tr');
-                    row.className = 'border-b';
-                    row.innerHTML = `
-                        <td class="py-2 px-4">${record.id}</td>
-                        <td class="py-2 px-4">${record.title}</td>
-                        <td class="py-2 px-4">${record.content}</td>
-                        <td class="py-2 px-4 text-center">
-                            ${(currentUser.role === 'admin' || currentUser.id === record.userId) ? `
-                                <button class="bg-blue-500 text-white px-3 py-1 rounded-md mr-2 edit-record" data-id="${record.id}" data-title="${record.title}" data-content="${record.content}">Редактировать</button>
-                                <button class="bg-red-500 text-white px-3 py-1 rounded-md delete-record" data-id="${record.id}">Удалить</button>
-                            ` : 'Нет прав'}
-                        </td>
-                    `;
-                    recordsTableBody.appendChild(row);
-                });
-
-                // Добавляем обработчики для кнопок редактирования/удаления
-                document.querySelectorAll('.edit-record').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const id = e.target.dataset.id;
-                        const title = e.target.dataset.title;
-                        const content = e.target.dataset.content;
-                        openEditModal(id, title, content);
-                    });
-                });
-
-                document.querySelectorAll('.delete-record').forEach(button => {
-                    button.addEventListener('click', async (e) => {
-                        const id = e.target.dataset.id;
-                        if (confirm(`Вы уверены, что хотите удалить запись с ID: ${id}?`)) {
-                            const response = await sendApiRequest('records', 'DELETE', null, id);
-                            if (response.ok) {
-                                alert('Запись успешно удалена!');
-                                displayRecords(); // Обновить список
-                            } else {
-                                alert('Ошибка при удалении: ' + (response.message || 'Неизвестная ошибка'));
-                            }
-                        }
-                    });
-                });
-
-            } else {
-                recordsTableBody.innerHTML = `<tr><td colspan="4" class="py-2 px-4 text-center text-red-500">${response.message || 'Ошибка загрузки записей'}</td></tr>`;
-            }
+            recordsTableBody.innerHTML = '<tr><td colspan="4" class="py-2 px-4 text-center">Загрузка записей... (Firebase)</td></tr>';
+            // const response = await sendApiRequest('records', 'GET'); // СТАРАЯ СТРОКА
+            console.log("Получение записей через Firebase..."); // ВРЕМЕННО
+            // Здесь будет логика получения записей из Firestore
+            recordsTableBody.innerHTML = `<tr><td colspan="4" class="py-2 px-4 text-center text-gray-500">Записи будут загружены после настройки Firestore.</td></tr>`; // ВРЕМЕННО
+            // if (response.ok) { ... } else { ... }
         }
 
         // --- Управление модальным окном редактирования ---
@@ -313,6 +284,7 @@
         });
 
         saveRecordButton.addEventListener('click', async () => {
+            // ЭТОТ БЛОК БУДЕТ ЗАМЕНЕН НА ЛОГИКУ FIREBASE FIRESTORE
             const id = currentRecordIdInput.value;
             const title = recordTitleInput.value;
             const content = recordContentInput.value;
@@ -326,31 +298,24 @@
             modalMessageDiv.textContent = 'Сохранение...';
             modalMessageDiv.className = 'text-blue-500 mb-4';
 
-            const response = await sendApiRequest('records', 'PUT', { title, content }, id);
-
-            if (response.ok) {
-                modalMessageDiv.textContent = 'Запись успешно обновлена!';
-                modalMessageDiv.className = 'text-green-500 mb-4';
-                displayRecords(); // Обновить список
-                setTimeout(() => {
-                    recordEditModal.classList.add('hidden');
-                }, 1000);
-            } else {
-                modalMessageDiv.textContent = response.message || 'Ошибка сохранения!';
-                modalMessageDiv.className = 'text-red-500 mb-4';
-            }
+            // const response = await sendApiRequest('records', 'PUT', { title, content }, id); // СТАРАЯ СТРОКА
+            console.log("Сохранение записи через Firebase..."); // ВРЕМЕННО
+            modalMessageDiv.textContent = 'Сохранено! (Временно)'; // ВРЕМЕННО
+            modalMessageDiv.className = 'text-green-500 mb-4'; // ВРЕМЕННО
+            // if (response.ok) { ... } else { ... }
+            setTimeout(() => {
+                recordEditModal.classList.add('hidden');
+            }, 1000);
         });
 
         // --- Сброс данных (только для админа) ---
         resetDataButton.addEventListener('click', async () => {
+            // ЭТОТ БЛОК БУДЕТ ЗАМЕНЕН НА ЛОГИКУ FIREBASE FIRESTORE ИЛИ CLOUD FUNCTIONS
             if (confirm('Вы уверены, что хотите сбросить все данные к значениям по умолчанию? Это действие необратимо!')) {
-                const response = await sendApiRequest('reset-data', 'POST');
-                if (response.ok) {
-                    alert('Данные успешно сброшены!');
-                    displayRecords(); // Обновить список после сброса
-                } else {
-                    alert('Ошибка сброса данных: ' + (response.message || 'Неизвестная ошибка'));
-                }
+                // const response = await sendApiRequest('reset-data', 'POST'); // СТАРАЯ СТРОКА
+                console.log("Сброс данных через Firebase..."); // ВРЕМЕННО
+                alert('Сброс данных! (Временно)'); // ВРЕМЕННО
+                // if (response.ok) { ... } else { ... }
             }
         });
 

@@ -12,7 +12,28 @@
         // --- ВАЖНО: ЗАМЕНИТЕ ЭТОТ URL НА СВОЙ API_ENDPOINT_URL ИЗ GOOGLE APPS SCRIPT ---
         const API_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbxv2DOB9Hx5_vVCM9mPLRiaGWEgn4JlPBSrXnC66ASBekRVI2aFHRCgHr402ivnIMw/exec'
         // НЕ ЗАБУДЬТЕ ПОСТАВИТЬ /exec В КОНЦЕ!
+<script>
+    const API_ENDPOINT_URL = 'ВАШ_НОВЫЙ_ТЕСТОВЫЙ_URL_ИЗ_CORS_Test_Project'; // Убедитесь, что это URL из вашего нового проекта
 
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Документ загружен. Пытаемся выполнить простой GET-запрос к Apps Script...');
+        fetch(API_ENDPOINT_URL + '?action=testget') // Добавляем простой параметр, чтобы Apps Script мог его увидеть
+            .then(response => {
+                console.log('GET-запрос к Apps Script: статус ответа', response.status);
+                // Проверим CORS-заголовки
+                console.log('GET-запрос к Apps Script: заголовки:', Array.from(response.headers.entries()));
+                return response.json();
+            })
+            .then(data => {
+                console.log('GET-запрос к Apps Script: данные:', data);
+            })
+            .catch(error => {
+                console.error('GET-запрос к Apps Script НЕ УДАЛСЯ:', error);
+            });
+    });
+
+    // ... (остальной ваш код JavaScript для входа) ...
+</script>
         let currentUser = null; // Текущий залогиненный пользователь
 
        // --- Вспомогательная функция для отправки запросов на Apps Script ---
